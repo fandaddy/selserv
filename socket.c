@@ -25,8 +25,7 @@ int make_socket_connect(int portnum)
     sd = socket(AF_INET, SOCK_STREAM, 0);
     if(sd == -1)
     {
-        perror("socket");
-        exit(1);
+        return -1;
     }
 
     bzero((void *)&saddr, sizeof(saddr));
@@ -36,14 +35,12 @@ int make_socket_connect(int portnum)
 
     if(bind(sd, (struct sockaddr *)&saddr, sizeof(saddr)) == -1)
     {
-        perror("bind");
-        exit(2);
+        return -1;
     }
 
     if(listen(sd, BACKLOG) == -1)
     {
-        perror("listen");
-        exit(3);
+        return -1;
     }
 
     return sd;
