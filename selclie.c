@@ -47,13 +47,13 @@ int main(int ac, char *av[])
         exit(EXIT_FAILURE);
     }
 
-    printf("type something to server:\n");
+/*    printf("type something to server:\n");
     if( fgets(sendbuf, 1024, stdin) == NULL )
     {
         perror("gets input");
         exit(EXIT_FAILURE);
     }
-    write(sock_id, sendbuf, 1024);
+    write(sock_id, sendbuf, 1024); */
 
     do_echocli(sock_id);
 
@@ -68,13 +68,23 @@ void do_echocli(int sd)
     int maxfd;
     struct timeval tv;
     int n;
-    char recvline[MAXLINE];
+    char recvbuf[MAXLINE], sendbuf[MAXLINE];
+    int fd_stdin = fileno(stdin);
+    if(fd_stdin > sd)
+    {
+        maxfd = fd_stdin;
+    }
+    else
+    {
+        maxfd = sd;
+    }
+    //printf("一开始打开的套接字端口是%d\n",sd);
 
     while(1)
     {
         FD_ZERO(&rfds);
         FD_SET(sd, &rfds);
-        maxfd = sd;
+        FD_SET(fd_stdin, &rfds);
         tv.tv_sec = 5;
         tv.tv_usec = 0;
 
@@ -91,7 +101,7 @@ void do_echocli(int sd)
 
         if(FD_ISSET(sd, &rfds))
         {
-            n = read(sd, recvline, MAXLINE);
+            n = read(sd, recvbuf, MAXLINE);
             if(n <= 0)
             {
                 fprintf(stderr, "client: server is closed.\n");
@@ -99,11 +109,21 @@ void do_echocli(int sd)
                 FD_CLR(sd, &rfds);
                 return; 
             }
+            fputs(recvbuf, stdout);
+            memset(recvbuf, 0, sizeof(recvbuf));
         }
-
-        printf("client recv msg is: %s\n", recvline);
-        sleep(5);
-        write(sd, recvline, strlen(recvline)+1);
+        if(FD_ISSET(fd_stdin, &rfds))
+        {
+            //printf("收到stdin的完备字符\n");
+            if(fgets(sendbuf, sizeof(sendbuf), stdin) == NULL)
+            {
+                break;
+            }
+            //printf("目前打开的套接字端口是%d\n",sd);
+            write(sd, sendbuf, strlen(sendbuf));
+            memset(sendbuf, 0, sizeof(sendbuf));
+        }
+       
     }
-
+    close(sd);
 }

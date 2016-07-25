@@ -64,11 +64,12 @@ int main(int ac, char *av[])
     while(1)
     {
         /* 每次调用select都要重新设置文件描述符和间隔时间 */
-        printf("又回到while循环了\n");
+        //printf("又回到while循环了\n");
         rfds = allset;
-        tv.tv_sec = 30;
-        tv.tv_usec = 0;
+        //tv.tv_sec = 30;
+        //tv.tv_usec = 0;
         retval = select(maxfd+1, &rfds, NULL, NULL, NULL);
+        //printf("retval is %d\n", retval);
         if(retval == -1)
         {
             perror("select");
@@ -103,6 +104,7 @@ int main(int ac, char *av[])
                     }
                     break;
                 }
+                //printf("client[%d]\n", i);
             }
             if(i == FD_SETSIZE)
             {
@@ -110,11 +112,13 @@ int main(int ac, char *av[])
                 exit(EXIT_FAILURE);
             }
             //printf("conn is %d\n", conn);
+            FD_SET(conn, &rfds);
             FD_SET(conn, &allset);
             if(conn > maxfd)
             {
                 maxfd = conn;
             }
+            //printf("maxi is %d\n");
         }
         for(i = 0; i <= maxi; i++)
         {
@@ -125,7 +129,7 @@ int main(int ac, char *av[])
             {
                 continue;
             }
-            if(FD_ISSET(conn, &allset))
+            if(FD_ISSET(conn, &rfds))
             {
                 //printf("有文字发过来了！\n");
                 char recvbuf[1024] = {0};
